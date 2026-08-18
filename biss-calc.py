@@ -116,11 +116,11 @@ def parseBiSSdata(data, encBits, reducedBits, verbose):
 		print("Pad bits   (variable 0s):", getPrintableDataString(data, padBitsIdx, padBitsSize))
 		print("Start bit     (always 1):", getPrintableDataString(data, startBitIdx, startBitSize))
 		print("CDS bit       (always 0):", getPrintableDataString(data, cdsBitIdx, cdsBitSize))
-		print("Position Data   ({}-bit):".format(encBits), getPrintableDataString(data, posDataIdx, posDataSize))
-		print("Encoder Error Bit (1=OK):", getPrintableDataString(data, encErrIdx, encErrSize))
-		print("Encoder Warn Bit  (1=OK):", getPrintableDataString(data, encWarnIdx, encWarnSize))
+		print("Position data   ({}-bit):".format(encBits), getPrintableDataString(data, posDataIdx, posDataSize))
+		print("Encoder error bit (1=OK):", getPrintableDataString(data, encErrIdx, encErrSize))
+		print("Encoder warn bit  (1=OK):", getPrintableDataString(data, encWarnIdx, encWarnSize))
 		print("CRC                     :", getPrintableDataString(data, crcValueIdx, crcValueSize))
-		print("Ignored Bits            :", getPrintableDataString(data, ignoredDataIdx, ignoredDataSize))
+		print("Ignored bits            :", getPrintableDataString(data, ignoredDataIdx, ignoredDataSize))
 		print()
 	
 	if crcActual == crcExpected:
