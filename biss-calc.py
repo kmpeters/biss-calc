@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 
-def crcValidation(data, crcToValidate):
-	# IAMHERE
+def crcCalculation(data):
+	'''
+	Note: This calculation was implmented based on the information
+	  in the "6-bit CRC calculation with 0x43 polynome for BiSS"
+	  section of the "Decoding the BiSS information" application
+	  note from RLS (E201D02_02, issue 2, 9th February 2017).
+	'''
 	
 	tableCRC6 = [
 	0x00, 0x03, 0x06, 0x05, 0x0C, 0x0F, 0x0A, 0x09,
@@ -29,8 +34,7 @@ def crcValidation(data, crcToValidate):
 	# Invert the crc bits
 	crc = ~crc & 0x3f
 	
-	#!print(crcToValidate, crc)
-	return (crc == crcToValidate)
+	return crc
 
 def getPrintableDataString(data, offset, size):
 	#print(len(data[offset:offset+size]))
@@ -87,20 +91,20 @@ def parseBiSSdata(data, encBits, reducedBits, verbose):
 	crcDataSize = posDataSize + encErrSize + encWarnSize
 	
 	# CRC Value
-	crcIdx = encWarnIdx + encWarnSize
-	crcSize = 6
-	crc = data[crcIdx:crcIdx+crcSize]
+	crcValueIdx = encWarnIdx + encWarnSize
+	crcValueSize = 6
+	crcValue = data[crcValueIdx:crcValueIdx+crcValueSize]
 	
 	# Ignored Bits
-	ignoredDataIdx = crcIdx + crcSize
+	ignoredDataIdx = crcValueIdx + crcValueSize
 	ignoredData = data[ignoredDataIdx:]
 	ignoredDataSize = len(ignoredData)
 	
 	#!print("010", posData, encErr, encWarn, crc, ignored)
 	
 	# Validate CRC
-	#!print(crc, crcData)
-	crcResult = crcValidation(int(crcData, base=2), int(crc, base=2))
+	crcActual = crcCalculation(int(crcData, base=2))
+	crcExpected = int(crcValue, base=2)
 	
 	# Convert position even if the CRC check failed
 	#!print(posData)
@@ -115,16 +119,17 @@ def parseBiSSdata(data, encBits, reducedBits, verbose):
 		print("Position Data   ({}-bit):".format(encBits), getPrintableDataString(data, posDataIdx, posDataSize))
 		print("Encoder Error Bit (1=OK):", getPrintableDataString(data, encErrIdx, encErrSize))
 		print("Encoder Warn Bit  (1=OK):", getPrintableDataString(data, encWarnIdx, encWarnSize))
-		print("CRC                     :", getPrintableDataString(data, crcIdx, crcSize))
+		print("CRC                     :", getPrintableDataString(data, crcValueIdx, crcValueSize))
 		print("Ignored Bits            :", getPrintableDataString(data, ignoredDataIdx, ignoredDataSize))
 		print()
 	
-	#!print(crcResult)
-	if crcResult:
+	if crcActual == crcExpected:
 		print("CRC check: OK")
 	else:
-		print("CRC check: FAILED")
-	
+		if verbose:
+			print("CRC check: FAILED - Expected {} ({:b}), Actual {} ({:b})".format(crcExpected, crcExpected, crcActual, crcActual))
+		else:
+			print("CRC check: FAILED")
 	# 
 	if (encErr == 1) and (encWarn == 1):
 		print("Encoder status: OK")
@@ -134,11 +139,8 @@ def parseBiSSdata(data, encBits, reducedBits, verbose):
 		print("Encoder status: ERROR")
 	elif encWarn == 0:
 		print("Encoder status: WARNING")
-		
-	#print("Encoder status: Error = {}, Warning = {}  (1=OK)".format(encErr, encWarn))
 	
 	# Convert position even if the CRC check failed
-	#!print(posData)
 	posDataint = int(posData, base=2)
 	
 	print("{}-bit position: {}".format(encBits, posDataint))
