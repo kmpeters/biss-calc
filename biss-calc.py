@@ -33,7 +33,7 @@ def crcValidation(data, crcToValidate):
 	return (crc == crcToValidate)
 
 
-def parseBiSSdata(data, encBits, reducedBits):
+def parseBiSSdata(data, encBits, reducedBits, verbose):
 	if len(data) != 64:
 		print("Error: data length (%d) isn't 64".format(len(data)))
 		return -1
@@ -46,7 +46,9 @@ def parseBiSSdata(data, encBits, reducedBits):
 	idx = data.find("010")
 	# Two non-pad bits were included and one pad bit was missed
 	padBits = idx - 1
+	padBitsStart = 2
 	
+	# Skip ahead to the end of the three bits that were found
 	idx += 3
 	
 	#!print("padBits {}", padBits)
@@ -54,30 +56,52 @@ def parseBiSSdata(data, encBits, reducedBits):
 	
 	# Extract important data
 	posData = data[idx:idx+encBits]
+	posDataStart = idx
 	crcData = data[idx:idx+encBits+2]
+	crcDataStart = idx
 	idx += encBits
 	encErr = int(data[idx])
+	encErrStart = idx
 	idx += 1
 	encWarn = int(data[idx])
+	encWarnStart = idx
 	idx += 1
 	crc = data[idx:idx+6]
+	crcStart = idx
 	idx += 6
 	ignored = data[idx:]
+	ignoredStart = idx
 	#!print("010", posData, encErr, encWarn, crc, ignored)
-	
-	# 
-	print("Encoder status: Error = {}, Warning = {}  (1=OK)".format(encErr, encWarn))
 	
 	# Validate CRC
 	#!print(crc, crcData)
 	crcResult = crcValidation(int(crcData, base=2), int(crc, base=2))
-	#!print(crcResult)
 	
+	# Convert position even if the CRC check failed
+	#!print(posData)
+	posDataint = int(posData, base=2)
+	
+	if verbose:
+		print(data)
+	
+	#!print(crcResult)
 	if crcResult:
-		print("CRC check OK")
+		print("CRC check: OK")
 	else:
-		print("CRC check FAILED")
+		print("CRC check: FAILED")
+	
+	# 
+	if (encErr == 1) and (encWarn == 1):
+		print("Encoder status: OK")
+	elif (encErr == 0) and (encWarn == 0):
+		print("Encoder status: ERROR & WARNING")
+	elif encErr == 0:
+		print("Encoder status: ERROR")
+	elif encWarn == 0:
+		print("Encoder status: WARNING")
 		
+	#print("Encoder status: Error = {}, Warning = {}  (1=OK)".format(encErr, encWarn))
+	
 	# Convert position even if the CRC check failed
 	#!print(posData)
 	posDataint = int(posData, base=2)
@@ -91,6 +115,7 @@ def main(args):
 	encBits = args.enc_bits
 	reducedBits = args.reduced_bits
 	hexStr = args.hex_data
+	verbose = args.verbose
 	# c0a1685e9f3bcc0a
 	#!print(hexStr)
 	intValue = int(hexStr, base=16)
@@ -98,9 +123,9 @@ def main(args):
 	#!print(intValue)
 	binStr = f'{intValue:b}'
 	# 1100000010100001011010000101111010011111001110111100110000001010
-	print(binStr)
+	#!print(binStr)
 	
-	parseBiSSdata(binStr, encBits, reducedBits)
+	parseBiSSdata(binStr, encBits, reducedBits, verbose)
 
 
 if __name__ == '__main__':
@@ -113,6 +138,7 @@ if __name__ == '__main__':
 	parser.add_argument("enc_bits", action="store", type=int, default=None, help="BiSS-C encoder resolution")
 	parser.add_argument("hex_data", action="store", default=None, help="BiSS-C hex data")
 	parser.add_argument("-r", action="store", dest="reduced_bits", type=int, default=0, help="Reduced data bits")
+	parser.add_argument("-v", action="store_true", dest="verbose", default=False, help="Enable verbose output")
 	
 	args = parser.parse_args(sys.argv[1:])
 	
