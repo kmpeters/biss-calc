@@ -43,12 +43,18 @@ def parseBiSSdata(data, bits):
 	
 	# Find Start & CDS bits
 	idx = data.find("010")
+	# Two non-pad bits were included and one pad bit was missed
+	padBits = idx - 1
+	
 	idx += 3
 	
-	# Extract important datad
-	crcData = data[idx:idx+34]
-	pos32 = data[idx:idx+32]
-	idx += 32
+	#!print("padBits {}", padBits)
+	#!print("bits {}", bits)
+	
+	# Extract important data
+	posData = data[idx:idx+bits]
+	crcData = data[idx:idx+bits+2]
+	idx += bits
 	encErr = int(data[idx])
 	idx += 1
 	encWarn = int(data[idx])
@@ -56,7 +62,7 @@ def parseBiSSdata(data, bits):
 	crc = data[idx:idx+6]
 	idx += 6
 	ignored = data[idx:]
-	#!print(pos32, encErr, encWarn, crc, ignored)
+	#!print("010", posData, encErr, encWarn, crc, ignored)
 	
 	# 
 	print("Encoder status (1=OK): Error = {}, Warning = {}".format(encErr, encWarn))
@@ -69,11 +75,11 @@ def parseBiSSdata(data, bits):
 		print("CRC check OK")
 		
 		# Convert position
-		#!print(pos32)
-		pos32int = int(pos32, base=2)
+		#!print(posData)
+		posDataint = int(posData, base=2)
 		
-		print("32-bit position: {}".format(pos32int))
-		print("{}-bit position: {}".format(bits, (pos32int >> (32 - bits))))
+		print("{}-bit position: {}".format(bits, posDataint))
+		#print("{}-bit position: {}".format(bits, (posDataint >> (32 - bits))))
 	else:
 		print("CRC check FAILED")
 
