@@ -32,6 +32,10 @@ def crcValidation(data, crcToValidate):
 	#!print(crcToValidate, crc)
 	return (crc == crcToValidate)
 
+def getPrintableDataString(data, offset, size):
+	#print(len(data[offset:offset+size]))
+	return " " * offset + data[offset:offset+size]
+	#return data[offset:size]
 
 def parseBiSSdata(data, encBits, reducedBits, verbose):
 	if len(data) != 64:
@@ -42,35 +46,56 @@ def parseBiSSdata(data, encBits, reducedBits, verbose):
 		print("Error: first two bits (%s) aren't '11'".format(data[:2]))
 		return -1
 	
+	# First Bits (always 11)
+	firstBitsIdx = 0
+	firstBitsSize = 2
+	
 	# Find Start & CDS bits
 	idx = data.find("010")
-	# Two non-pad bits were included and one pad bit was missed
-	padBits = idx - 1
-	padBitsStart = 2
 	
-	# Skip ahead to the end of the three bits that were found
-	idx += 3
+	# Pad Bits (variable number of 0's; changes with BiSS clock frequency)
+	padBitsIdx = firstBitsIdx + firstBitsSize
+	# One pad bit was missed and two non-pad bits were included
+	padBitsSize = idx + 1 - firstBitsSize
 	
-	#!print("padBits {}", padBits)
-	#!print("bits {}", bits)
+	# Start Bit (always 1)
+	startBitIdx = padBitsIdx + padBitsSize
+	startBitSize = 1
 	
-	# Extract important data
-	posData = data[idx:idx+encBits]
-	posDataStart = idx
-	crcData = data[idx:idx+encBits+2]
-	crcDataStart = idx
-	idx += encBits
-	encErr = int(data[idx])
-	encErrStart = idx
-	idx += 1
-	encWarn = int(data[idx])
-	encWarnStart = idx
-	idx += 1
-	crc = data[idx:idx+6]
-	crcStart = idx
-	idx += 6
-	ignored = data[idx:]
-	ignoredStart = idx
+	# CDS Bit (always 0)
+	cdsBitIdx = startBitIdx + startBitSize
+	cdsBitSize = 1
+	
+	# Position Data
+	posDataIdx = cdsBitIdx + cdsBitSize
+	posData = data[posDataIdx:posDataIdx+encBits]
+	posDataSize = encBits
+	
+	# Encoder Status Bit: Error
+	encErrIdx = posDataIdx + posDataSize
+	encErr = int(data[encErrIdx])
+	encErrSize = 1
+
+	# Encoder Status Bit: Warn
+	encWarnIdx = encErrIdx + encErrSize
+	encWarn = int(data[encWarnIdx])
+	encWarnSize = 1
+	
+	# CRC Data = Position Data + Status Bits
+	crcDataIdx = posDataIdx
+	crcData = data[posDataIdx:posDataIdx+posDataSize+encErrSize+encWarnSize]
+	crcDataSize = posDataSize + encErrSize + encWarnSize
+	
+	# CRC Value
+	crcIdx = encWarnIdx + encWarnSize
+	crcSize = 6
+	crc = data[crcIdx:crcIdx+crcSize]
+	
+	# Ignored Bits
+	ignoredDataIdx = crcIdx + crcSize
+	ignoredData = data[ignoredDataIdx:]
+	ignoredDataSize = len(ignoredData)
+	
 	#!print("010", posData, encErr, encWarn, crc, ignored)
 	
 	# Validate CRC
@@ -83,6 +108,15 @@ def parseBiSSdata(data, encBits, reducedBits, verbose):
 	
 	if verbose:
 		print(data)
+		print(getPrintableDataString(data, firstBitsIdx, firstBitsSize))
+		print(getPrintableDataString(data, padBitsIdx, padBitsSize))
+		print(getPrintableDataString(data, startBitIdx, startBitSize))
+		print(getPrintableDataString(data, cdsBitIdx, cdsBitSize))
+		print(getPrintableDataString(data, posDataIdx, posDataSize))
+		print(getPrintableDataString(data, encErrIdx, encErrSize))
+		print(getPrintableDataString(data, encWarnIdx, encWarnSize))
+		print(getPrintableDataString(data, crcIdx, crcSize))
+		print(getPrintableDataString(data, ignoredDataIdx, ignoredDataSize))
 	
 	#!print(crcResult)
 	if crcResult:
