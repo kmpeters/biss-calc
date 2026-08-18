@@ -40,6 +40,7 @@ def parseBiSSdata(data, encBits, reducedBits):
 	
 	if data[:2] != "11":
 		print("Error: first two bits (%s) aren't '11'".format(data[:2]))
+		return -1
 	
 	# Find Start & CDS bits
 	idx = data.find("010")
