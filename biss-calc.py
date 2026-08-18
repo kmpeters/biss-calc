@@ -107,16 +107,17 @@ def parseBiSSdata(data, encBits, reducedBits, verbose):
 	posDataint = int(posData, base=2)
 	
 	if verbose:
-		print(data)
-		print(getPrintableDataString(data, firstBitsIdx, firstBitsSize))
-		print(getPrintableDataString(data, padBitsIdx, padBitsSize))
-		print(getPrintableDataString(data, startBitIdx, startBitSize))
-		print(getPrintableDataString(data, cdsBitIdx, cdsBitSize))
-		print(getPrintableDataString(data, posDataIdx, posDataSize))
-		print(getPrintableDataString(data, encErrIdx, encErrSize))
-		print(getPrintableDataString(data, encWarnIdx, encWarnSize))
-		print(getPrintableDataString(data, crcIdx, crcSize))
-		print(getPrintableDataString(data, ignoredDataIdx, ignoredDataSize))
+		print("BiSS data      (64-bits):", data)
+		print("First bits   (always 11):", getPrintableDataString(data, firstBitsIdx, firstBitsSize))
+		print("Pad bits   (variable 0s):", getPrintableDataString(data, padBitsIdx, padBitsSize))
+		print("Start bit     (always 1):", getPrintableDataString(data, startBitIdx, startBitSize))
+		print("CDS bit       (always 0):", getPrintableDataString(data, cdsBitIdx, cdsBitSize))
+		print("Position Data   ({}-bit):".format(encBits), getPrintableDataString(data, posDataIdx, posDataSize))
+		print("Encoder Error Bit (1=OK):", getPrintableDataString(data, encErrIdx, encErrSize))
+		print("Encoder Warn Bit  (1=OK):", getPrintableDataString(data, encWarnIdx, encWarnSize))
+		print("CRC                     :", getPrintableDataString(data, crcIdx, crcSize))
+		print("Ignored Bits            :", getPrintableDataString(data, ignoredDataIdx, ignoredDataSize))
+		print()
 	
 	#!print(crcResult)
 	if crcResult:
